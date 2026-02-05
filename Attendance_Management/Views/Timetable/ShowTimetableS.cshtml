@@ -1,0 +1,128 @@
+﻿@model List<Attendance_Management.Controllers.TimetableVM>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/timetable.css" asp-append-version="true" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <title>Dashboard</title>
+</head>
+<body>
+    <div class="header">
+        <div class="hamburger" id="hamburger">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <div class="info">
+            <p id="st_name"></p>
+            <p id="st_roll"></p>
+        </div>
+    </div>
+    <div class="main">
+        <div class="side">
+            <div class="side-items">
+                <span class="side-head"><a asp-controller="Login" asp-action="dashboardS">Student Portal</a></span>
+                <span><i class="fas fa-calendar-check"></i><a asp-controller="Attendance" asp-action="attendanceS">View Attendance</a></span>
+                <span><i class="fas fa-chart-bar"></i><a asp-action="reportS" asp-controller="Report">Generate Report</a></span>
+                <span><i class="fas fa-key"></i><a asp-controller="Password" asp-action="PasswordChangingS">Change Password</a></span>
+                <span><i class="fas fa-table"></i><a asp-controller="Timetable" asp-action="ShowTimetableS">View Timetable</a></span>
+                <span><i class="fas fa-table"></i><a asp-controller="Manage" asp-action="assignS">Register Courses</a></span>
+                <span><i class="fa-solid fa-right-from-bracket"></i><a asp-controller="Login" asp-action="Logout">Logout</a></span>
+            </div>
+        </div>
+
+        <div class="main-body">
+            <div class="above-content">
+                <div class="above-head">Timetable</div>
+                <div class="printing"><button>Print Timetable</button></div>
+            </div>
+
+            <div class="table2" id="timetable-section">
+                @* Define time slots and days *@
+                @{
+                    var timeSlots = new[]
+                    {
+                "08:00 - 09:00",
+                "09:00 - 10:00",
+                "10:00 - 11:00",
+                "11:00 - 12:00",
+                "12:00 - 13:00",
+                "13:00 - 14:00",
+                "14:00 - 15:00",
+                "15:00 - 16:00"
+                };
+
+                    var days = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" };
+                }
+
+                <table>
+                    <tr>
+                        <th>Days</th>
+                        @foreach (var slot in timeSlots)
+                        {
+                            <th>@slot</th>
+                        }
+                    </tr>
+
+                    @foreach (var day in days)
+                    {
+                        <tr>
+                            <td>@day</td>
+
+                            @foreach (var slot in timeSlots)
+                            {
+                                @* Find the class for this day and time slot *@
+                                var classItem = Model.FirstOrDefault(c =>
+                                c.Day == day &&
+                                c.StartTime.ToString("HH:mm") == slot.Split(" - ")[0]
+                                );
+
+                                <td>
+                                    @if (classItem != null)
+                                    {
+                                        <div class="subject-name">@classItem.CourseName</div>
+                                        <div class="teacher-name">@classItem.TeacherName</div>
+                                        <div class="class-name">Section: @classItem.SectionName</div>
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    }
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+    fetch('/Login/data').then(res=>res.text()).then(data=>{
+        document.getElementById('st_name').innerHTML = data.split(',')[0];
+        document.getElementById('st_roll').innerHTML = data.split(',')[1];
+    });
+
+    const hamburger = document.getElementById("hamburger");
+    const sidebar = document.querySelector(".side");
+    hamburger.addEventListener("click", () => {
+      sidebar.classList.toggle("active");
+      document.body.classList.toggle("sidebar-open");
+    });
+
+    const printButton = document.querySelector(".printing button");
+    printButton.addEventListener("click", () => {
+      const timetable = document.getElementById("timetable-section");
+
+      html2canvas(timetable, { scale: 2 }).then((canvas) => {
+        const link = document.createElement("a");
+        link.download = "Timetable.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
+    });
+</script>
+</html>

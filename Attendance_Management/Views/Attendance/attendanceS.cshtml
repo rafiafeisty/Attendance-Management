@@ -1,0 +1,149 @@
+﻿@model List<Attendance_Management.Controllers.studentAtt>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance</title>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/attendance.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true">
+</head>
+<body>
+    <div class="header">
+        <div class="hamburger" id="hamburger">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <div class="info">
+            <p id="st_name"></p>
+            <p id="st_roll"></p>
+        </div>
+    </div>
+    <div class="main">
+        <div class="side">
+            <div class="side-items">
+                <span class="side-head"><a asp-controller="Login" asp-action="dashboardS">Student Portal</a></span>
+                <span><i class="fas fa-calendar-check"></i><a asp-controller="Attendance" asp-action="attendanceS">View Attendance</a></span>
+                <span><i class="fas fa-chart-bar"></i><a asp-action="reportS" asp-controller="Report">Generate Report</a></span>
+                <span><i class="fas fa-key"></i><a asp-controller="Password" asp-action="PasswordChangingS">Change Password</a></span>
+                <span><i class="fas fa-table"></i><a asp-controller="Timetable" asp-action="ShowTimetableS">View Timetable</a></span>
+                <span><i class="fas fa-table"></i><a asp-controller="Manage" asp-action="assignS">Register Courses</a></span>
+                <span><i class="fa-solid fa-right-from-bracket"></i><a asp-controller="Login" asp-action="Logout">Logout</a></span>
+            </div>
+        </div>
+
+        <div class="main-body">
+            <div class="selection">
+                <div>
+                    <label for="Course">Select Course</label>
+                    <select name="course" id="course-select">
+                        <option value="">All Courses</option>
+                        @foreach (var c in Model.Select(a => a.Course_name).Distinct())
+                        {
+                            <option value="@c">@c</option>
+                        }
+                    </select>
+                </div>
+                <div class="printing"><button id="show-btn">Show</button></div>
+            </div>
+
+            <div class="attendance-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="attendance-body">
+                        @foreach (var a in Model)
+                        {
+                            <tr data-course="@a.Course_name" data-status="@a.Status.ToString().ToLower()">
+                                <td>@a.Date.ToString("yyyy-MM-dd")</td>
+                                <td class="@(a.Status ? "present" : "absent")">@(a.Status ? "Present" : "Absent")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="average-attendance">
+                <h3>Attendance Average</h3>
+                <p class="average-value" id="average-value">
+                    @{
+                        if (Model.Any())
+                        {
+                            var presentCount = Model.Count(a => a.Status);
+                            var percentage = Math.Round((double)presentCount / Model.Count * 100, 1);
+                            @($"{percentage}%")
+                        }
+                        else
+                        {
+                            @("0%")
+                        }
+                    }
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    const hamburger = document.getElementById('hamburger');
+    const sidebar = document.querySelector('.side');
+    hamburger.addEventListener('click', () => {
+      sidebar.classList.toggle('active');
+      document.body.classList.toggle('sidebar-open');
+    });
+
+    fetch('/Login/data').then(res=>res.text()).then(data=>{
+        document.getElementById('st_name').innerHTML=data.split(',')[0];
+        document.getElementById('st_roll').innerHTML=data.split(',')[1];
+    });
+
+    // Filter table by selected course
+    const showBtn = document.getElementById('show-btn');
+    const courseSelect = document.getElementById('course-select');
+    const tableRows = document.querySelectorAll('#attendance-body tr');
+    const averageValue = document.getElementById('average-value');
+
+    showBtn.addEventListener('click', () => {
+        const selectedCourse = courseSelect.value;
+        let presentCount = 0;
+        let totalCount = 0;
+
+        tableRows.forEach(row => {
+            const rowCourse = row.dataset.course;
+
+            if(selectedCourse === "" || rowCourse === selectedCourse) {
+                row.style.display = '';
+                totalCount++;
+
+                const status = row.dataset.status;
+                if(status === "true") {
+                    presentCount++;
+                }
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        // Calculate and display average
+        if(totalCount > 0) {
+            const percentage = Math.round((presentCount / totalCount) * 100);
+            averageValue.textContent = percentage + "%";
+        } else {
+            averageValue.textContent = "0%";
+        }
+    });
+
+    // Initialize with "All Courses" selected
+    document.addEventListener('DOMContentLoaded', function() {
+        showBtn.click();
+    });
+</script>
+</html>

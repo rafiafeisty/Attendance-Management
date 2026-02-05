@@ -1,0 +1,71 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.boxicons.com/fonts/basic/boxicons.min.css"
+    rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/login.css" asp-append-version="true"/>
+    <title>Login</title>
+</head>
+<body>
+    <div class="boxing">
+        <div class="side-bar">
+            <h1 class="side-heading">
+                <div class="spans">
+                    <span>Attendance</span>
+                    <span>Management</span>
+                    <span>System</span>
+                </div>
+            </h1>
+        </div>
+
+        <div class="form-body">
+            <div class="title">
+                <div class="heading">Login</div>
+            </div>
+            <div class="form-login">
+                <form method="post" asp-action="check" asp-controller="Login" class="login-field" autocomplete="off">
+                    <div class="input-box">
+                        <input name="username" required type="email" />
+                        <label for="username">Username</label>
+                        <i class="bx bx-envelope-open icon"></i>
+                    </div>
+                    <div class="input-box">
+                        <input name="password" required type="password" />
+                        <label for="password">Password</label>
+                        <i class="bx bx-lock icon"></i>
+                    </div>
+                    <div class="input-box">
+                        <button class="submit-btn">
+                            <div class="text">Login</div>
+                            <i class="bx bx-arrow-to-right-stroke"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    function closeAlert() {
+        document.getElementById("loginAlert").style.display = "none";
+    }
+
+    // Auto-hide after 4 seconds
+    setTimeout(() => {
+        const alertBox = document.getElementById("loginAlert");
+        if (alertBox) alertBox.style.display = "none";
+    }, 4000);
+</script>
+
+@if (TempData["LoginError"] != null)
+{
+    <div class="custom-alert" id="loginAlert">
+        <i class="bx bx-error-circle"></i>
+        <span>@TempData["LoginError"]</span>
+        <button onclick="closeAlert()">×</button>
+    </div>
+}
+
+</html>

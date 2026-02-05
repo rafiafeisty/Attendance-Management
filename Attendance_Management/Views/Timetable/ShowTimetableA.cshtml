@@ -1,0 +1,230 @@
+﻿@model dynamic
+@{
+    ViewData["Title"] = "Admin Timetable";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/css/timetable.css" asp-append-version="true">
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+
+    <title>Document</title>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <div class="header d-flex justify-content-between align-items-center px-3 py-2">
+        <div class="hamburger" id="hamburger">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <div class="info">
+            <p class="m-0">Admin Name</p>
+        </div>
+    </div>
+
+    <div class="main d-flex">
+
+        <!-- Sidebar -->
+        <div class="side">
+            <div class="side-items">
+                <span class="side-head"><a asp-controller="Login" asp-action="dashboardA">Admin Portal</a></span>
+                <span><i class="fas fa-chalkboard-teacher"></i><a asp-controller="Manage" asp-action="manageT">Manage Teachers</a></span>
+                <span><i class="fas fa-book"></i><a asp-controller="Manage" asp-action="manageS">Manage Student</a></span>
+                <span><i class="fas fa-id-badge"></i><a asp-controller="Manage" asp-action="managebadge">Manage Badge</a></span>
+                <span><i class="fas fa-users"></i><a asp-controller="Manage" asp-action="managesection">Manage Section</a></span>
+                <span><i class="fas fa-key"></i><a asp-controller="Password" asp-action="PasswordChangingA">Change Password</a></span>
+                <span><i class="fas fa-table"></i><a asp-controller="Timetable" asp-action="ShowTimetableA">View Timetable</a></span>
+                <span><i class="fa-solid fa-right-from-bracket"></i><a asp-controller="Login" asp-action="Logout">Logout</a></span>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-body flex-grow-1 p-3">
+
+            <!-- Filter Section (Bootstrap Grid) -->
+            <div class="container-fluid">
+                <div class="row g-3 selection">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Select Program</label>
+                        <select class="form-select" id="programSelect">
+                            <option value="">--Select Program--</option>
+                            @foreach (var p in ViewBag.Programs)
+                            {
+                                <option value="@p.Pid">@p.Pname</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Select Session</label>
+                        <select class="form-select" id="sessionSelect">
+                            <option value="">--Select Session--</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">Select Section</label>
+                        <select class="form-select" id="sectionSelect">
+                            <option value="">--Select Section--</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-1 d-flex align-items-end printing">
+                        <button onclick="loadTimetable()">Show</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table2 mt-4" id="showtable" style="display:none;">
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle text-center" id="timetableTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Days</th>
+                                <th>8:00 - 9:00</th>
+                                <th>9:00 - 10:00</th>
+                                <th>10:00 - 11:00</th>
+                                <th>11:00 - 12:00</th>
+                                <th>12:00 - 01:00</th>
+                                <th>01:00 - 02:00</th>
+                                <th>02:00 - 03:00</th>
+                                <th>03:00 - 04:00</th>
+                            </tr>
+                        </thead>
+                        <tbody id="timetableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="custom-alert" id="loginAlert" style="display:none">
+                <i class="fas fa-exclamation-circle"></i>
+                <span id="alertMessage"></span>
+                <button onclick="closeAlert()">×</button>
+            </div>
+
+        </div>
+    </div>
+    <script>
+        function showAlert(message, type = "danger") {
+            const alertBox = document.getElementById("loginAlert");
+            const alertMessage = document.getElementById("alertMessage");
+
+            // reset classes
+            alertBox.classList.remove("success");
+
+            // apply success if needed
+            if (type === "success") {
+                alertBox.classList.add("success");
+            }
+
+            alertMessage.innerText = message;
+            alertBox.style.display = "flex";
+
+            setTimeout(() => {
+                alertBox.style.display = "none";
+            }, 4000);
+        }
+
+        function closeAlert() {
+            document.getElementById("loginAlert").style.display = "none";
+        }
+    </script>
+    <script>
+        const hamburger = document.getElementById('hamburger');
+        const sidebar = document.querySelector('.side');
+        hamburger.addEventListener('click', () => {
+          sidebar.classList.toggle('active');
+          document.body.classList.toggle('sidebar-open');
+        });
+        function showing(){
+          const tab=document.getElementById("showtable")
+          tab.style.display="block"
+        }
+    </script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function(){
+
+            // When program changes, load sessions
+            $('#programSelect').change(function(){
+                var pid = $(this).val();
+                if(pid){
+                    $.getJSON('/Timetable/GetSessions?pid='+pid, function(data){
+                        var options = '<option value="">--Select Session--</option>';
+                        $.each(data, function(i, s){
+                            options += `<option value="${s.sid}">${s.sName}</option>`;
+                        });
+                        $('#sessionSelect').html(options);
+                        $('#sectionSelect').html('<option value="">--Select Section--</option>'); // reset section
+                    });
+                }
+            });
+
+            // When session changes, load sections
+            $('#sessionSelect').change(function(){
+                var sid = $(this).val();
+                if(sid){
+                    $.getJSON('/Timetable/GetSections?sid='+sid, function(data){
+                        var options = '<option value="">--Select Section--</option>';
+                        $.each(data, function(i, sec){
+                            options += `<option value="${sec.secId}">${sec.secName}</option>`;
+                        });
+                        $('#sectionSelect').html(options);
+                    });
+                }
+            });
+        });
+
+        // Load timetable when show button clicked
+        function loadTimetable(){
+            var pid = $('#programSelect').val();
+            var sid = $('#sessionSelect').val();
+            var secid = $('#sectionSelect').val();
+
+            if(!pid || !sid || !secid){
+                showAlert("Please select all options","danger");
+                return;
+            }
+
+            $.getJSON(`/Timetable/GetTimetable?pid=${pid}&sid=${sid}&secid=${secid}`, function(data){
+                var body = '';
+                var days = ["Monday","Tuesday","Wednesday","Thursday","Friday"];
+                $.each(days, function(_, day){
+                    body += `<tr><td>${day}</td>`;
+                    for(var i=0;i<8;i++){
+                        var slot = data.find(d => d.daysOfWeek==day && (new Date("1970-01-01 "+d.startTime).getHours()==8+i));
+                        if(slot){
+                            body += `<td>
+                                <div class="subject-name">${slot.courseName}</div>
+                                <div class="teacher-name">${slot.teacherName}</div>
+                                <div class="class-name">Class: ${slot.sectionName}</div>
+                            </td>`;
+                        } else {
+                            body += `<td></td>`;
+                        }
+                    }
+                    body += `</tr>`;
+                });
+                $('#timetableBody').html(body);
+                $('#showtable').show();
+            });
+        }
+    </script>
+
+
+</body>
+
+</html>

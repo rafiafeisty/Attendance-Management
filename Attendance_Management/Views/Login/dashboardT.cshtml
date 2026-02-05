@@ -1,0 +1,90 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <title>Dashboard</title>
+</head>
+<body>
+    <div class="header">
+        <div class="hamburger" id="hamburger">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <div class="info">
+            <p id="t_name"></p>
+        </div>>
+    </div>
+    <div class="main">
+        <div class="side">
+            <div class="side-items">
+                <span class="side-head"><a asp-controller="Login" asp-action="dashboardT">Teacher Portal</a></span>
+                <span><i class="fas fa-calendar-check"></i><a asp-controller="Attendance" asp-action="attendanceT">Mark Attendance</a></span>
+                <span><i class="fas fa-key"></i><a asp-controller="Password" asp-action="PasswordChangingT">Change Password</a></span>
+                <span><i class="fas fa-table"></i><a asp-controller="Timetable" asp-action="ShowTimetableT">View Timetable</a></span>
+                <span><i class="fa-solid fa-registered"></i><a asp-controller="Attendance" asp-action="ViewT">View Attendance</a></span>
+                <span><i class="fa-solid fa-right-from-bracket"></i><a asp-controller="Login" asp-action="Logout">Logout</a></span>
+            </div>
+        </div>
+        <div class="main-body">
+            <div class="cards">
+                <div class="course-card">
+                    <div class="card-content">
+                        <div>Number of Courses Assigned</div>
+                        <div class="number">@Model</div>
+                    </div>
+                    <div class="card-icon attendance-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="course-table">
+                <div>Courses Registered</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Course Name</th>
+                            <th>Teacher Name</th>
+                        </tr>
+                    </thead>
+                    <tbody id="course-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    fetch('/Login/data').then(res=>res.text()).then(data=>{
+        document.getElementById('t_name').innerHTML=data
+    });
+    const hamburger = document.getElementById('hamburger');
+    const sidebar = document.querySelector('.side');
+    hamburger.addEventListener('click', () => {
+      sidebar.classList.toggle('active');
+      document.body.classList.toggle('sidebar-open');
+    });
+    async function getdata(){
+    const data=await fetch('/Login/Assignc');
+    const res=await data.json();
+
+    const tbody=document.getElementById('course-body');
+    tbody.innerHTML=""
+    res.forEach(item=>{
+        const row=document.createElement('tr');
+        row.innerHTML=`
+        <td>${item.coursename}</td>
+        <td>${item.teachername}</td>
+        `
+        tbody.appendChild(row);
+    }
+    )
+    }
+    getdata();
+</script>
+
+</html>

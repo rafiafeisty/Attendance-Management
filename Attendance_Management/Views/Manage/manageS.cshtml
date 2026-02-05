@@ -1,0 +1,514 @@
+﻿@model Attendance_Management.Controllers.ManageStudentVM
+@{
+    ViewData["Title"] = "Manage Students";
+}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/manage.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Manage Student</title>
+    
+</head>
+
+<body>
+    <input type="hidden" id="selectedStudentId" />
+    <input type="hidden" id="selectedProgramId" />
+    <input type="hidden" id="selectedSessionId" />
+    <input type="hidden" id="selectedCourseId" />
+    <input type="hidden" id="selectedSectionId" />
+
+    <div class="header">
+        <div class="hamburger" id="hamburger">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <div class="info">
+            <p>Admin Name</p>
+        </div>
+    </div>
+    <div class="main">
+        <div class="side">
+            <div class="side-items">
+                <span class="side-head"><a asp-controller="Login" asp-action="dashboardA">Admin Portal</a></span>
+                <span><i class="fas fa-chalkboard-teacher"></i><a asp-controller="Manage" asp-action="manageT">Manage Teachers</a></span>
+                <span><i class="fas fa-book"></i><a asp-controller="Manage" asp-action="manageS">Manage Student</a></span>
+                <span><i class="fas fa-id-badge"></i><a asp-controller="Manage" asp-action="managebadge">Manage Badge</a></span>
+                <span><i class="fas fa-users"></i><a asp-controller="Manage" asp-action="managesection">Manage Section</a></span>
+                <span><i class="fas fa-key"></i><a asp-controller="Password" asp-action="PasswordChangingA">Change Password</a></span>
+                <span><i class="fas fa-table"></i><a asp-controller="Timetable" asp-action="ShowTimetableA">View Timetable</a></span>
+                <span><i class="fa-solid fa-right-from-bracket"></i><a asp-controller="Login" asp-action="Logout">Logout</a></span>
+            </div>
+        </div>
+        <div class="main-body">
+            <!-- Search + Add -->
+            <div class="functions row g-3">
+                <div class="col-12 col-md-9 col-lg-9">
+                    <input type="text" class="search" id="searchBox" placeholder="Search Student..." />
+                </div>
+                <div class="col-12 col-md-3 col-lg-3">
+                    <button data-bs-toggle="modal" data-bs-target="#myModal">Add Student</button>
+                </div>
+            </div>
+
+            <!-- No Results Message -->
+            <div id="noResults" class="no-results">
+                <p>No student found with that name.</p>
+            </div>
+
+            <!-- Search Results Table -->
+            <div id="searchResult" style="display: none" class="dummy">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Roll Number</th>
+                            <th>Name</th>
+                            <th>Username</th>
+                            <th>Password</th>
+                            <th>Assign Course</th>
+                            <th>Delete Student</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Add Student Modal -->
+            <div class="modal" id="myModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <!-- Modal Header -->
+                        <div class="modal-header">
+                            <h3 class="modal-title">Add Student</h3>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <!-- Modal body -->
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Student Name</label>
+                                <input type="text" class="form-control" id="studentName" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Select Program</label>
+                                <select class="form-select" id="programSelect">
+                                    <option value="">Select Program</option>
+                                    @foreach (var p in Model.Programs)
+                                    {
+                                        <option value="@p.ProgramId">@p.ProgramName</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Select Session</label>
+                                <select class="form-select" id="sessionSelect">
+                                    <option value="">Select Session</option>
+                                    @foreach (var s in Model.Sessions)
+                                    {
+                                        <option value="@s.SessionId" data-program="@s.ProgramId">@s.SessionName</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Select Section</label>
+                                <select class="form-select" id="sectionSelect">
+                                    <option value="">Select Section</option>
+                                    @foreach (var sec in Model.Sections)
+                                    {
+                                        <option value="@sec.SectionId" data-session="@sec.SessionId">@sec.SectionName</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="printing">
+                                <button data-bs-dismiss="modal" onclick="addStudent()">Add Student</button>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="custom-alert" id="loginAlert" style="display:none">
+                <i class="fas fa-exclamation-circle"></i>
+                <span id="alertMessage"></span>
+                <button onclick="closeAlert()">×</button>
+            </div>
+            <!-- Assign Course Modal -->
+            <div class="modal" id="myModal2">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <!-- Modal Header -->
+                        <div class="modal-header">
+                            <h3 class="modal-title">Assign Course</h3>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <input type="hidden" id="assignStudentId" />
+                            <input type="hidden" id="assignSectionId" />
+                            <input type="hidden" id="assignSessionId" />
+
+                            <div class="mb-3">
+                                <label class="form-label">Student Name</label>
+                                <input type="text" class="form-control" id="assignStudentName" readonly />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Select Course</label>
+                                <select class="form-select" id="assignCourseSelect">
+                                    <option value="">Select Course</option>
+                                    @* Courses will be populated dynamically based on session *@
+                                </select>
+                            </div>
+
+                            <div class="printing">
+                                <button onclick="assignStudentCourse()" data-bs-dismiss="modal">Assign</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function showAlert(message, type = "danger") {
+            const alertBox = document.getElementById("loginAlert");
+            const alertMessage = document.getElementById("alertMessage");
+
+            // reset classes
+            alertBox.classList.remove("success");
+
+            // apply success if needed
+            if (type === "success") {
+                alertBox.classList.add("success");
+            }
+
+            alertMessage.innerText = message;
+            alertBox.style.display = "flex";
+
+            setTimeout(() => {
+                alertBox.style.display = "none";
+            }, 4000);
+        }
+
+        function closeAlert() {
+            document.getElementById("loginAlert").style.display = "none";
+        }
+    </script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+    <script>
+        // Sidebar toggle
+        const hamburger = document.getElementById("hamburger");
+        const sidebar = document.querySelector(".side");
+        hamburger.addEventListener("click", () => {
+            sidebar.classList.toggle("active");
+        });
+
+        // Filter Sessions when Program changes
+        const programSelect = document.getElementById('programSelect');
+        const sessionSelect = document.getElementById('sessionSelect');
+        const sectionSelect = document.getElementById('sectionSelect');
+
+        programSelect.addEventListener('change', () => {
+            const programId = programSelect.value;
+
+            // Show all sessions first
+            Array.from(sessionSelect.options).forEach(opt => {
+                opt.style.display = 'block';
+            });
+
+            // Hide sessions that don't belong to selected program
+            Array.from(sessionSelect.options).forEach(opt => {
+                if (opt.value && opt.dataset.program !== programId) {
+                    opt.style.display = 'none';
+                }
+            });
+
+            sessionSelect.value = '';
+            sectionSelect.value = '';
+        });
+
+        sessionSelect.addEventListener('change', () => {
+            const sessionId = sessionSelect.value;
+
+            // Show all sections first
+            Array.from(sectionSelect.options).forEach(opt => {
+                opt.style.display = 'block';
+            });
+
+            // Hide sections that don't belong to selected session
+            Array.from(sectionSelect.options).forEach(opt => {
+                if (opt.value && opt.dataset.session !== sessionId) {
+                    opt.style.display = 'none';
+                }
+            });
+
+            sectionSelect.value = '';
+        });
+
+        let currentSearchTerm = '';
+        let currentStudents = [];
+
+        const searchBox = document.getElementById("searchBox");
+        const resultDiv = document.getElementById("searchResult");
+        const noResultsDiv = document.getElementById("noResults");
+        const studentBody = document.getElementById("studentBody");
+
+        searchBox.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                currentSearchTerm = searchBox.value.trim();
+                if (currentSearchTerm !== "") {
+                    searchStudents();
+                } else {
+                    hideAllResults();
+                }
+            }
+        });
+
+        function hideAllResults() {
+            resultDiv.style.display = "none";
+            noResultsDiv.style.display = "none";
+        }
+
+        function showNoResults() {
+            resultDiv.style.display = "none";
+            noResultsDiv.style.display = "block";
+        }
+
+        function showResults() {
+            resultDiv.style.display = "block";
+            noResultsDiv.style.display = "none";
+        }
+
+        async function addStudent() {
+            const name = document.getElementById("studentName").value.trim();
+            const programId = document.getElementById("programSelect").value;
+            const sessionId = document.getElementById("sessionSelect").value;
+            const sectionId = document.getElementById("sectionSelect").value;
+
+            if (!name || !programId || !sessionId || !sectionId) {
+                showAlert("Please fill all fields","danger");
+                return;
+            }
+
+            try {
+                const response = await fetch('/Manage/AddStudent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `name=${encodeURIComponent(name)}&programId=${programId}&sessionId=${sessionId}&sectionId=${sectionId}`
+                });
+
+                const data = await response.text();
+
+                if (data === "Ok") {
+                    showAlert("Student added successfully","success");
+                    document.getElementById("studentName").value = "";
+                    document.getElementById("programSelect").value = "";
+                    document.getElementById("sessionSelect").value = "";
+                    document.getElementById("sectionSelect").value = "";
+                    if (currentSearchTerm !== "") {
+                        await searchStudents();
+                    }
+                } else {
+                    showAlert("Error adding student: " + data,"danger");
+                }
+            } catch (error) {
+                console.error(error);
+                showAlert("Error adding student","danger");
+            }
+        }
+
+        async function searchStudents() {
+            const name = document.getElementById("searchBox").value.trim();
+            if (!name) {
+                hideAllResults();
+                return;
+            }
+
+            try {
+                const response = await fetch('/Manage/SearchStudent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `name=${encodeURIComponent(name)}`
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+                currentStudents = data || [];
+                renderStudentTable(currentStudents);
+            } catch (error) {
+                console.error(error);
+                showNoResults();
+            }
+        }
+
+        function renderStudentTable(students) {
+            studentBody.innerHTML = "";
+            if (!students || students.length === 0) {
+                showNoResults();
+                return;
+            }
+            showResults();
+
+            students.forEach(student => {
+                const row = document.createElement("tr");
+                row.id = `student-row-${student.studentId}`;
+                row.innerHTML = `
+                    <td>${student.rollNumber || ''}</td>
+                    <td>${student.studentName || ''}</td>
+                    <td>${student.username || ''}</td>
+                    <td>${student.password || ''}</td>
+                    <td>
+                        <button class="assign-btn"
+                                data-bs-toggle="modal"
+                                data-bs-target="#myModal2"
+                                onclick="setStudentForAssignment(${student.studentId}, '${student.studentName || ''}', ${student.secId || 0})">
+                            Assign
+                        </button>
+                    </td>
+                    <td>
+                        <button class="delete-btn" onclick="deleteStudent(${student.studentId}, '${student.studentName || ''}')">
+                            Delete
+                        </button>
+                    </td>
+                `;
+                studentBody.appendChild(row);
+            });
+        }
+
+        async function setStudentForAssignment(studentId, studentName, secId) {
+            document.getElementById("assignStudentId").value = studentId;
+            document.getElementById("assignStudentName").value = studentName;
+            document.getElementById("assignSectionId").value = secId;
+
+            // Fetch session ID for this section
+            try {
+                const response = await fetch(`/Manage/GetSessionBySection?sectionId=${secId}`);
+                if (response.ok) {
+                    const sessionData = await response.json();
+                    if (sessionData && sessionData.sessionId) {
+                        document.getElementById("assignSessionId").value = sessionData.sessionId;
+                        // Load courses for this session
+                        loadCoursesForSession(sessionData.sessionId);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching session:', error);
+            }
+        }
+
+        async function loadCoursesForSession(sessionId) {
+            const courseSelect = document.getElementById("assignCourseSelect");
+            courseSelect.innerHTML = '<option value="">Loading courses...</option>';
+
+            try {
+                const response = await fetch(`/Manage/GetCoursesBySession?sessionId=${sessionId}`);
+                if (response.ok) {
+                    const courses = await response.json();
+                    courseSelect.innerHTML = '<option value="">Select Course</option>';
+                    courses.forEach(course => {
+                        const option = document.createElement('option');
+                        option.value = course.courseId;
+                        option.textContent = course.courseName;
+                        courseSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading courses:', error);
+                courseSelect.innerHTML = '<option value="">Error loading courses</option>';
+            }
+        }
+
+        async function assignStudentCourse() {
+            const studentId = document.getElementById("assignStudentId").value;
+            const courseId = document.getElementById("assignCourseSelect").value;
+
+            if (!studentId || !courseId) {
+                showAlert("Please select a course","danger");
+                return;
+            }
+
+            try {
+                const response = await fetch('/Manage/AssignCourseS', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `stid=${studentId}&cid=${courseId}`
+                });
+
+                const result = await response.text();
+                if (result === "Ok") {
+                    showAlert("Course assigned successfully","success");
+                    document.getElementById("assignCourseSelect").value = "";
+                } else if (result === "AlreadyAssigned") {
+                    showAlert("This course is already assigned to the student","danger");
+                } else if (result === "NoTeacher") {
+                    showAlert("No teacher is assigned to this course","success");
+                } else {
+                    showAlert("Error: " + result,"danger");
+                }
+            } catch (error) {
+                console.error(error);
+                showAlert("Error assigning course","danger");
+            }
+        }
+
+        async function deleteStudent(id, studentName) {
+            if (!confirm(`Are you sure you want to delete student: ${studentName || 'this student'}?`)) return;
+
+            try {
+                const response = await fetch('/Manage/DeleteStudent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `stid=${id}`
+                });
+
+                const result = await response.text();
+                if (result === "Ok") {
+                    // Remove from table
+                    const rowToRemove = document.getElementById(`student-row-${id}`);
+                    if (rowToRemove) rowToRemove.remove();
+
+                    // Update current array
+                    currentStudents = currentStudents.filter(s => s.studentId !== id);
+
+                    // Show no results if empty
+                    if (currentStudents.length === 0) {
+                        showNoResults();
+                    }
+
+                    showAlert("Student deleted successfully","success");
+                } else {
+                    showAlert("Error deleting student: " + result,"danger");
+                }
+            } catch (error) {
+                console.error(error);
+                showAlert("Error deleting student","danger");
+            }
+        }
+    </script>
+</body>
+</html>

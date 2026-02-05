@@ -1,0 +1,226 @@
+﻿@model List<Attendance_Management.Controllers.studentAttribute>
+
+<!DOCTYPE html>
+<html lang="en">
+@{
+    var courseSummary = Model
+        .GroupBy(x => x.Course_name)
+        .Select(g => new
+        {
+            Course = g.Key,
+            Total = g.Count(),
+            Present = g.Count(x => x.Status == true),
+            Percentage = g.Count() == 0 ? 0 :
+                         Math.Round((double)g.Count(x => x.Status) / g.Count() * 100, 2)
+        })
+        .ToList();
+}
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- jsPDF UMD -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/report.css" asp-append-version="true" />
+</head>
+
+<body>
+    <div class="header">
+        <div class="hamburger" id="hamburger">
+            <div></div><div></div><div></div>
+        </div>
+
+        <div class="info">
+            <p id="st_name"></p>
+            <p id="st_roll"></p>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="side">
+            <div class="side-items">
+                <span class="side-head"><a asp-controller="Login" asp-action="dashboardS">Student Portal</a></span>
+                <span><i class="fas fa-calendar-check"></i><a asp-controller="Attendance" asp-action="attendanceS">View Attendance</a></span>
+                <span><i class="fas fa-chart-bar"></i><a asp-action="reportS" asp-controller="Report">Generate Report</a></span>
+                <span><i class="fas fa-key"></i><a asp-controller="Password" asp-action="PasswordChangingS">Change Password</a></span>
+                <span><i class="fas fa-table"></i><a asp-controller="Timetable" asp-action="ShowTimetableS">View Timetable</a></span>
+                <span><i class="fas fa-table"></i><a asp-controller="Manage" asp-action="assignS">Register Courses</a></span>
+                <span><i class="fa-solid fa-right-from-bracket"></i><a asp-controller="Login" asp-action="Logout">Logout</a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-body">
+        <div class="top-head">
+            <h1 class="report-head">Subject Reports</h1>
+            <div class="printing"><button id="pdfBtn">Generate Report</button></div>
+        </div>
+
+        <div class="subject-reports">
+            @foreach (var c in courseSummary)
+            {
+                <div class="cards">
+                    <h3>@c.Course</h3>
+                    <p>Attendance: <span>@c.Percentage%</span></p>
+                </div>
+            }
+        </div>
+
+        <h2 class="atten-head">Attendance Graph</h2>
+        <canvas id="attendanceChart" width="400" height="200"></canvas>
+    </div>
+</body>
+
+
+
+<script>
+    const subjects = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        courseSummary.Select(x => new
+        {
+            name = x.Course,
+            attendance = x.Percentage
+        })
+    ));
+
+    const ctx = document.getElementById("attendanceChart");
+
+    new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: subjects.map(s => s.name),
+            datasets: [{
+                label: "Attendance (%)",
+                data: subjects.map(s => s.attendance),
+                backgroundColor: "rgba(54, 162, 235, 0.7)",
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true, max: 100 }
+            }
+        }
+    });
+</script>
+<script>
+    let studentName = "";
+    let studentRoll = "";
+
+    fetch('/Login/data')
+        .then(res => res.text())
+        .then(data => {
+            const parts = data.split(',');
+
+            studentName = parts[0];
+            studentRoll = parts[1];
+
+            // Header display (already working)
+            document.getElementById('st_name').innerHTML = studentName;
+            document.getElementById('st_roll').innerHTML = studentRoll;
+        });
+
+    const hamburger = document.getElementById('hamburger');
+    const sidebar = document.querySelector('.side');
+    hamburger.addEventListener('click', () => {
+        sidebar.classList.toggle('active');
+        document.body.classList.toggle('sidebar-open');
+    });
+</script>
+
+
+    <script>
+        // PDF Generation
+        document.getElementById("pdfBtn").addEventListener("click", async () => {
+          // FIX: jsPDF UMD Initialization
+          const doc = new window.jspdf.jsPDF();
+
+          // Header
+          doc.setFillColor(41, 128, 185);
+          doc.rect(0, 0, 210, 30, "F");
+
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(20);
+          doc.text("ATTENDANCE REPORT", 105, 17, { align: "center" });
+
+          // Student Information
+          doc.setTextColor(0, 0, 0);
+          doc.setFontSize(14);
+          doc.text("Student Information", 15, 45);
+
+          doc.setFontSize(11);
+          doc.text(`Name: ${studentName}`, 15, 55);
+          doc.text(`Roll Number: ${studentRoll}`, 15, 62);
+
+          // Subject Summary
+          doc.setFontSize(14);
+          doc.text("Subject Attendance Summary", 15, 95);
+
+          let y = 110;
+
+          subjects.forEach((s, i) => {
+            if (i % 2 === 0) {
+              doc.setFillColor(245, 245, 245);
+              doc.rect(15, y - 7, 180, 15, "F");
+            }
+
+            doc.setFontSize(10);
+            doc.text(s.name, 20, y);
+
+            let attendanceValue = s.attendance;
+
+            // Color based on %
+            if (attendanceValue >= 90) doc.setTextColor(0, 128, 0);
+            else if (attendanceValue >= 75) doc.setTextColor(255, 165, 0);
+            else doc.setTextColor(255, 0, 0);
+
+            doc.text(`Attendance: ${attendanceValue}%`, 150, y);
+
+            doc.setTextColor(0, 0, 0);
+            y += 15;
+          });
+
+          // NEW PAGE FOR GRAPH
+          doc.addPage();
+
+          doc.setFillColor(41, 128, 185);
+          doc.rect(0, 0, 210, 30, "F");
+
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(16);
+          doc.text("ATTENDANCE VISUALIZATION", 105, 17, { align: "center" });
+
+          const chartCanvas = document.getElementById("attendanceChart");
+          const imgData = chartCanvas.toDataURL("image/png", 1.0);
+
+          doc.addImage(imgData, "PNG", 15, 40, 180, 100);
+          doc.setFontSize(8);
+          doc.setTextColor(150, 150, 150);
+          doc.text("This report was generated automatically.", 105, 285, { align: "center" });
+
+          doc.save("Student_Attendance_Report.pdf");
+        });
+    </script>
+
+<script>
+    fetch('/Login/data').then(res=>res.text()).then(data=>{
+        document.getElementById('st_name').innerHTML=data.split(',')[0];
+        document.getElementById('st_roll').innerHTML=data.split(',')[1];
+    });
+    const hamburger = document.getElementById('hamburger');
+    const sidebar = document.querySelector('.side');
+    hamburger.addEventListener('click', () => {
+      sidebar.classList.toggle('active');
+      document.body.classList.toggle('sidebar-open');
+    });
+</script>
+</html>

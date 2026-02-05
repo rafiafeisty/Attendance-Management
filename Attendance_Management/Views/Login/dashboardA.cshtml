@@ -1,0 +1,115 @@
+﻿@model Attendance_Management.Controllers.Adata
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <title>Dashboard</title>
+</head>
+<body>
+    <div class="header">
+        <div class="hamburger" id="hamburger">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <div class="info">
+            <p>Admin</p>
+        </div>
+    </div>
+    <div class="main">
+        <div class="side">
+            <div class="side-items">
+                <span class="side-head"><a asp-controller="Login" asp-action="dashboardA">Admin Portal</a></span>
+                <span><i class="fas fa-chalkboard-teacher"></i><a asp-controller="Manage" asp-action="manageT">Manage Teachers</a></span>
+                <span><i class="fas fa-book"></i><a asp-controller="Manage" asp-action="manageS">Manage Student</a></span>
+                <span><i class="fas fa-id-badge"></i><a asp-controller="Manage" asp-action="managebadge">Manage Badge</a></span>
+                <span><i class="fas fa-users"></i><a asp-controller="Manage" asp-action="managesection">Manage Section</a></span>
+                <span><i class="fas fa-key"></i><a asp-controller="Password" asp-action="PasswordChangingA">Change Password</a></span>
+                <span><i class="fas fa-table"></i><a asp-controller="Timetable" asp-action="ShowTimetableA">View Timetable</a></span>
+                <span><i class="fa-solid fa-right-from-bracket"></i><a asp-controller="Login" asp-action="Logout">Logout</a></span>
+            </div>
+        </div>
+        <div class="main-body">
+            <div class="cards">
+                <!-- Total Students -->
+                <div class="course-card">
+                    <div class="card-content">
+                        <div>Number of Total Students</div>
+                        <div class="number">@Model.Stnumber</div>
+                    </div>
+                    <div class="card-icon student-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                </div>
+
+                <!-- Total Teachers -->
+                <div class="course-card">
+                    <div class="card-content">
+                        <div>Number of Total Teachers</div>
+                        <div class="number">@Model.Tecnumber</div>
+                    </div>
+                    <div class="card-icon teacher-icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                </div>
+
+                <!-- Courses Available -->
+                <div class="class-card">
+                    <div class="card-content">
+                        <div>Number of Courses Available</div>
+                        <div class="number">@Model.Coursenumber</div>
+                    </div>
+                    <div class="card-icon course-icon">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                </div>
+
+                <!-- Total Programs -->
+                <div class="class-card">
+                    <div class="card-content">
+                        <div>Number of Total Programs</div>
+                        <div class="number">@Model.Pnumber</div>
+                    </div>
+                    <div class="card-icon program-icon">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                </div>
+
+                <!-- Total Badges -->
+                <div class="class-card">
+                    <div class="card-content">
+                        <div>Number of Total Badges</div>
+                        <div class="number">@Model.Bnumber</div>
+                    </div>
+                    <div class="card-icon badge-icon">
+                        <i class="fas fa-id-badge"></i>
+                    </div>
+                </div>
+
+                <!-- Total Sections -->
+                <div class="class-card">
+                    <div class="card-content">
+                        <div>Number of Total Sections</div>
+                        <div class="number">@Model.Secnumber</div>
+                    </div>
+                    <div class="card-icon section-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    const hamburger = document.getElementById("hamburger");
+    const sidebar = document.querySelector(".side");
+    hamburger.addEventListener("click", () => {
+      sidebar.classList.toggle("active");
+      document.body.classList.toggle("sidebar-open");
+    });
+</script>
+</html>

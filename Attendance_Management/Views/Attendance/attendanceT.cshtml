@@ -1,0 +1,345 @@
+﻿@model List<Attendance_Management.Controllers.teacherlist>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="~/css/attendance.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <title>Dashboard</title>
+</head>
+<body>
+    <div class="header">
+        <div class="hamburger" id="hamburger">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <div class="info">
+            <p id="t_name"></p>
+        </div>
+    </div>
+    <div class="main">
+        <div class="side">
+            <div class="side-items">
+                <span class="side-head"><a asp-controller="Login" asp-action="dashboardT">Teacher Portal</a></span>
+                <span><i class="fas fa-calendar-check"></i><a asp-controller="Attendance" asp-action="attendanceT">Mark Attendance</a></span>
+                <span><i class="fas fa-key"></i><a asp-controller="Password" asp-action="PasswordChangingT">Change Password</a></span>
+                <span><i class="fas fa-table"></i><a asp-controller="Timetable" asp-action="ShowTimetableT">View Timetable</a></span>
+                <span><i class="fa-solid fa-registered"></i><a asp-controller="Attendance" asp-action="ViewT">View Attendance</a></span>
+                <span><i class="fa-solid fa-right-from-bracket"></i><a asp-controller="Login" asp-action="Logout">Logout</a></span>
+            </div>
+        </div>
+
+        <div class="main-body">
+            <div class="selection">
+
+                <!-- Program -->
+                <div>
+                    <label>Select Program</label>
+                    <select id="programSelect">
+                        <option value="">Select Program</option>
+                        @foreach (var program in Model
+                        .GroupBy(x => x.Program_id)
+                        .Select(g => g.First()))
+                        {
+                            <option value="@program.Program_id">@program.Program_name</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Course -->
+                <div>
+                    <label>Select Subject</label>
+                    <select id="courseSelect">
+                        <option value="">Select Course</option>
+                        @* Initially empty; populated based on selected program *@
+                    </select>
+                </div>
+
+                <!-- Session -->
+                <div>
+                    <label>Select Session</label>
+                    <select id="sessionSelect">
+                        <option value="">Select Session</option>
+                    </select>
+                </div>
+
+                <!-- Section -->
+                <div>
+                    <label>Select Section</label>
+                    <select id="sectionSelect">
+                        <option value="">Select Section</option>
+                    </select>
+                </div>
+
+                <div class="show-btn printing">
+                    <button id="showStudentsBtn">Show Students</button>
+                </div>
+            </div>
+
+            <!-- Students Attendance Table -->
+            <div class="students-table" id="studentsTable" style="display:none">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Roll Number</th>
+                            <th>Student Name</th>
+                            <th>Present</th>
+                            <th>Absent</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentsBody"></tbody>
+                </table>
+            <div class="printing" style="width: 100%; margin-top: 30px">
+                <button id="printBtn">Mark Attendance</button>
+            </div>
+            </div>
+            <div class="custom-alert" id="loginAlert" style="display:none">
+                <i class="fas fa-exclamation-circle"></i>
+                <span id="alertMessage"></span>
+                <button onclick="closeAlert()">×</button>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    function showAlert(message, type = "danger") {
+        const alertBox = document.getElementById("loginAlert");
+        const alertMessage = document.getElementById("alertMessage");
+
+        // reset classes
+        alertBox.classList.remove("success");
+
+        // apply success if needed
+        if (type === "success") {
+            alertBox.classList.add("success");
+        }
+
+        alertMessage.innerText = message;
+        alertBox.style.display = "flex";
+
+        setTimeout(() => {
+            alertBox.style.display = "none";
+        }, 4000);
+    }
+
+    function closeAlert() {
+        document.getElementById("loginAlert").style.display = "none";
+    }
+</script>
+
+<script>
+    // Fetch teacher name
+    fetch('/Login/data')
+        .then(res => res.text())
+        .then(data => { document.getElementById('t_name').innerHTML = data });
+
+    const hamburger = document.getElementById("hamburger");
+    const sidebar = document.querySelector(".side");
+    hamburger.addEventListener("click", () => {
+        sidebar.classList.toggle("active");
+        document.body.classList.toggle("sidebar-open");
+    });
+</script>
+
+<script>
+    const modelData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model));
+
+    const programSelect = document.getElementById("programSelect");
+    const courseSelect = document.getElementById("courseSelect");
+    const sessionSelect = document.getElementById("sessionSelect");
+    const sectionSelect = document.getElementById("sectionSelect");
+
+    function resetSelect(select, placeholder) {
+        select.innerHTML = `<option value="">${placeholder}</option>`;
+    }
+
+    // Program → Courses
+    programSelect.addEventListener("change", function () {
+        const pid = this.value;
+        resetSelect(courseSelect, "Select Course");
+        resetSelect(sessionSelect, "Select Session");
+        resetSelect(sectionSelect, "Select Section");
+
+        if (!pid) return;
+
+        const courses = modelData
+            .filter(x => x.Program_id == pid)
+            .filter((v, i, a) => a.findIndex(t => t.Course_id === v.Course_id) === i);
+
+        courses.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.Course_id;
+            opt.text = c.Course_name;
+            courseSelect.appendChild(opt);
+        });
+    });
+
+    // Course → Sessions
+    courseSelect.addEventListener("change", function () {
+        const pid = programSelect.value;
+        const courseId = this.value;
+        resetSelect(sessionSelect, "Select Session");
+        resetSelect(sectionSelect, "Select Section");
+
+        if (!pid || !courseId) return;
+
+        const sessions = modelData
+            .filter(x => x.Program_id == pid && x.Course_id == courseId)
+            .filter((v, i, a) => a.findIndex(t => t.Session_id === v.Session_id) === i);
+
+        sessions.forEach(s => {
+            const opt = document.createElement("option");
+            opt.value = s.Session_id;
+            opt.text = s.Session_name;
+            sessionSelect.appendChild(opt);
+        });
+    });
+
+    // Session → Sections
+    sessionSelect.addEventListener("change", function () {
+        const pid = programSelect.value;
+        const courseId = courseSelect.value;
+        const sessionId = this.value;
+        resetSelect(sectionSelect, "Select Section");
+
+        if (!pid || !courseId || !sessionId) return;
+
+        const sections = modelData
+            .filter(x => x.Program_id == pid && x.Course_id == courseId && x.Session_id == sessionId)
+            .filter((v, i, a) => a.findIndex(t => t.Section_id === v.Section_id) === i);
+
+        sections.forEach(sec => {
+            const opt = document.createElement("option");
+            opt.value = sec.Section_id;
+            opt.text = sec.Section_name;
+            sectionSelect.appendChild(opt);
+        });
+    });
+
+</script>
+
+<script>
+    const showStudentsBtn = document.getElementById("showStudentsBtn");
+    const studentsTable = document.getElementById("studentsTable");
+    const studentsBody = document.getElementById("studentsBody");
+
+        showStudentsBtn.addEventListener("click", function () {
+        const pid = programSelect.value;
+        const cid = courseSelect.value;
+        const sid = sessionSelect.value;
+        const secid = sectionSelect.value;
+
+        if (!pid || !cid || !sid || !secid) {
+            showAlert("Please select Program, Course, Session, and Section","danger");
+            return;
+        }
+
+        fetch(`/Attendance/fetchingstudents?pid=${pid}&cid=${cid}&sid=${sid}&secid=${secid}`)
+            .then(res => res.json())
+            .then(data => {
+                studentsBody.innerHTML = "";
+
+                if (data.length === 0) {
+                    studentsBody.innerHTML = `<tr><td colspan="4">No students found</td></tr>`;
+                    studentsTable.style.display = "block";
+                    return;
+                }
+
+                data.forEach((s) => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${s.rollNumber}</td>
+                        <td>${s.studentName}</td>
+                        <td><input type="radio" name="att_${s.studentId}" value="true" checked></td>
+                        <td><input type="radio" name="att_${s.studentId}" value="false"></td>
+                    `;
+                    studentsBody.appendChild(row);
+                });
+
+                studentsTable.style.display = "block";
+            })
+            .catch(err => {
+                console.error(err);
+                showAlert("Error loading students","danger");
+            });
+    });
+
+    const markBtn = document.getElementById("printBtn");
+
+    markBtn.addEventListener("click", async function () {
+
+        const pid = programSelect.value;
+        const cid = courseSelect.value;
+        const sid = sessionSelect.value;
+        const secid = sectionSelect.value;
+
+        if (!pid || !cid || !sid || !secid) {
+            showAlert("Missing selection","danger");
+            return;
+        }
+
+        const check = await fetch(
+            `/Attendance/CheckAttendance?cid=${cid}&secid=${secid}&sid=${sid}&pid=${pid}`
+        ).then(r => r.json());
+
+        let isEdit = false;
+
+        if (check.alreadyMarked) {
+            isEdit = confirm(
+                "Attendance is already marked for today.\nDo you want to edit it?"
+            );
+            if (!isEdit) return;
+        }
+
+        submitAttendance(isEdit);
+    });
+    function submitAttendance(isEdit) {
+
+        const st_ids = [];
+        const statuses = [];
+
+        document.querySelectorAll("input[type='radio']:checked")
+            .forEach(radio => {
+                st_ids.push(radio.name.replace("att_", ""));
+                statuses.push(radio.value);
+            });
+
+        if (st_ids.length === 0) {
+            showAlert("Please mark attendance","danger");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("cid", courseSelect.value);
+        formData.append("sec_id", sectionSelect.value);
+        formData.append("sid", sessionSelect.value);
+        formData.append("pid", programSelect.value);
+        formData.append("isEdit", isEdit);
+
+        st_ids.forEach(id => formData.append("st_id", id));
+        statuses.forEach(s => formData.append("status", s));
+
+        fetch("/Attendance/marking", {
+            method: "POST",
+            body: formData
+        })
+        .then(res => res.text())
+        .then(result => {
+            if (result === "Ok") {
+                showAlert(isEdit ? "Attendance updated successfully" : "Attendance marked successfully","success");
+
+                // ✅ CLEAR TABLE (same format preserved)
+                studentsBody.innerHTML = "";
+                studentsTable.style.display = "none";
+            } else {
+                showAlert("Error occurred","danger");
+            }
+        });
+    }
+
+</script>
+
+</html>

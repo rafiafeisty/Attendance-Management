@@ -1,0 +1,48 @@
+﻿.dummy table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 26px;
+    margin-bottom: 10px;
+}
+
+    .dummy table th {
+        background: var(--primary-color);
+        color: white;
+        padding: 10px;
+    }
+
+    .dummy table td {
+        padding: 10px;
+        background: #fff;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .dummy table button {
+        padding: 5px 10px;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+        .dummy table button:hover {
+            background: var(--link-hover);
+        }
+
+.printing button {
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    padding: 10px;
+    padding-left: 15px;
+    padding-right: 15px;
+    transition: var(--transition-3s);
+    border-radius: 15px;
+    border: none;
+}
+
+    .printing button:hover {
+        background-color: var(--link-hover);
+        transition: var(--transition-3s);
+        cursor: pointer;
+    }

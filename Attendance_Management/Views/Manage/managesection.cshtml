@@ -1,0 +1,742 @@
+﻿@model Attendance_Management.Controllers.ManageTeacherVM
+@{
+    ViewData["Title"] = "Manage Sections";
+}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/manage.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Manage Section</title>
+</head>
+
+<body>
+    <input type="hidden" id="selectedSectionId" />
+
+    <div class="header">
+        <div class="hamburger" id="hamburger">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <div class="info">
+            <p>Admin Name</p>
+        </div>
+    </div>
+    <div class="main">
+        <div class="side">
+            <div class="side-items">
+                <span class="side-head"><a asp-controller="Login" asp-action="dashboardA">Admin Portal</a></span>
+                <span><i class="fas fa-chalkboard-teacher"></i><a asp-controller="Manage" asp-action="manageT">Manage Teachers</a></span>
+                <span><i class="fas fa-book"></i><a asp-controller="Manage" asp-action="manageS">Manage Student</a></span>
+                <span><i class="fas fa-id-badge"></i><a asp-controller="Manage" asp-action="managebadge">Manage Badge</a></span>
+                <span><i class="fas fa-users"></i><a asp-controller="Manage" asp-action="managesection">Manage Section</a></span>
+                <span><i class="fas fa-key"></i><a asp-controller="Password" asp-action="PasswordChangingA">Change Password</a></span>
+                <span><i class="fas fa-table"></i><a asp-controller="Timetable" asp-action="ShowTimetableA">View Timetable</a></span>
+                <span><i class="fa-solid fa-right-from-bracket"></i><a asp-controller="Login" asp-action="Logout">Logout</a></span>
+            </div>
+        </div>
+        <div class="main-body">
+            <!-- Search + Add -->
+            <div class="functions row g-3">
+                <div class="col-12 col-md-9 col-lg-9">
+                    <input type="text" class="search" id="searchBox" placeholder="Search by Section Name, Session, or Program..." />
+                </div>
+                <div class="col-12 col-md-3 col-lg-3">
+                    <button data-bs-toggle="modal" data-bs-target="#addSectionModal">Add Section</button>
+                </div>
+            </div>
+
+            <!-- Bulk Add Button -->
+            <div class="functions row g-3 mt-3">
+                <div class="col-12">
+                    <button class="bulk-add-btn" data-bs-toggle="modal" data-bs-target="#bulkAddModal">
+                        <i class="fas fa-file-excel"></i> Bulk Add Students to Section
+                    </button>
+                </div>
+            </div>
+
+            <!-- No Results Message -->
+            <div id="noResults" class="no-results">
+                <p>No sections found.</p>
+            </div>
+
+            <!-- Search Results Table -->
+            <div id="searchResult" style="display: none" class="dummy">
+                <table class="search-result-table">
+                    <thead>
+                        <tr>
+                            <th>Section Name</th>
+                            <th>Program</th>
+                            <th>Session</th>
+                            <th>Student Count</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sectionBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Add Section Modal -->
+            <div class="modal fade" id="addSectionModal" tabindex="-1" aria-labelledby="addSectionModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="addSectionModalLabel">Add New Section</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="addSectionMessage" class="modal-message"></div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Select Program</label>
+                                <select class="form-select" id="addProgramSelect">
+                                    <option value="">Select Program</option>
+                                    @foreach (var p in Model.Programs)
+                                    {
+                                        <option value="@p.ProgramId">@p.ProgramName</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Select Session</label>
+                                <select class="form-select" id="addSessionSelect">
+                                    <option value="">Select Session</option>
+                                    @foreach (var s in Model.Sessions)
+                                    {
+                                        <option value="@s.SessionId" data-program="@s.ProgramId">@s.SessionName</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Section Name</label>
+                                <input type="text" class="form-control" id="sectionName" placeholder="e.g., A, B, C" />
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="addSection()">Add Section</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bulk Add Students Modal -->
+            <div class="modal fade" id="bulkAddModal" tabindex="-1" aria-labelledby="bulkAddModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="bulkAddModalLabel">Bulk Add Students to Section</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="bulkAddMessage" class="modal-message"></div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Select Program</label>
+                                <select class="form-select" id="bulkProgramSelect">
+                                    <option value="">Select Program</option>
+                                    @foreach (var p in Model.Programs)
+                                    {
+                                        <option value="@p.ProgramId">@p.ProgramName</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Select Session</label>
+                                <select class="form-select" id="bulkSessionSelect">
+                                    <option value="">Select Session</option>
+                                    @foreach (var s in Model.Sessions)
+                                    {
+                                        <option value="@s.SessionId" data-program="@s.ProgramId">@s.SessionName</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Select Section</label>
+                                <select class="form-select" id="bulkSectionSelect">
+                                    <option value="">Select Section</option>
+                                    @foreach (var sec in Model.Sections)
+                                    {
+                                        <option value="@sec.SectionId" data-session="@sec.SessionId">@sec.SectionName</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="file-upload">
+                                <input type="file" class="form-control" id="excelFile" accept=".xlsx, .xls" />
+                                <small class="text-muted">Upload Excel file with student names in column A (first row is header)</small>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-success" onclick="bulkAddStudents()">
+                                <i class="fas fa-upload"></i> Upload and Add Students
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade" id="viewStudentsModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="viewStudentsTitle">Section Students</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <table class="table table-bordered">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th style="color: white">#</th>
+                                        <th style="color: white">Roll No</th>
+                                        <th style="color: white">Student Name</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentsTableBody"></tbody>
+                            </table>
+
+                            <div id="noStudents" class="text-center text-muted" style="display:none;">
+                                No students found in this section.
+                            </div>
+                        </div>
+                        <div class="custom-alert" id="loginAlert" style="display:none">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span id="alertMessage"></span>
+                            <button onclick="closeAlert()">×</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script>
+        function showAlert(message, type = "danger") {
+            const alertBox = document.getElementById("loginAlert");
+            const alertMessage = document.getElementById("alertMessage");
+
+            // reset classes
+            alertBox.classList.remove("success");
+
+            // apply success if needed
+            if (type === "success") {
+                alertBox.classList.add("success");
+            }
+
+            alertMessage.innerText = message;
+            alertBox.style.display = "flex";
+
+            setTimeout(() => {
+                alertBox.style.display = "none";
+            }, 4000);
+        }
+
+        function closeAlert() {
+            document.getElementById("loginAlert").style.display = "none";
+        }
+    </script>
+    <script>
+        // Sidebar toggle
+        const hamburger = document.getElementById("hamburger");
+        const sidebar = document.querySelector(".side");
+        hamburger.addEventListener("click", () => {
+            sidebar.classList.toggle("active");
+        });
+
+        // Filter Sessions when Program changes in Add Section modal
+        const addProgramSelect = document.getElementById('addProgramSelect');
+        const addSessionSelect = document.getElementById('addSessionSelect');
+
+        addProgramSelect.addEventListener('change', () => {
+            const programId = addProgramSelect.value;
+
+            // Show all sessions first
+            Array.from(addSessionSelect.options).forEach(opt => {
+                opt.style.display = 'block';
+            });
+
+            // Hide sessions that don't belong to selected program
+            Array.from(addSessionSelect.options).forEach(opt => {
+                if (opt.value && opt.dataset.program !== programId) {
+                    opt.style.display = 'none';
+                }
+            });
+
+            addSessionSelect.value = '';
+        });
+
+        // Filter Sessions when Program changes in Bulk Add modal
+        const bulkProgramSelect = document.getElementById('bulkProgramSelect');
+        const bulkSessionSelect = document.getElementById('bulkSessionSelect');
+        const bulkSectionSelect = document.getElementById('bulkSectionSelect');
+
+        bulkProgramSelect.addEventListener('change', () => {
+            const programId = bulkProgramSelect.value;
+
+            // Show all sessions first
+            Array.from(bulkSessionSelect.options).forEach(opt => {
+                opt.style.display = 'block';
+            });
+
+            // Hide sessions that don't belong to selected program
+            Array.from(bulkSessionSelect.options).forEach(opt => {
+                if (opt.value && opt.dataset.program !== programId) {
+                    opt.style.display = 'none';
+                }
+            });
+
+            bulkSessionSelect.value = '';
+            bulkSectionSelect.value = '';
+        });
+
+        bulkSessionSelect.addEventListener('change', () => {
+            const sessionId = bulkSessionSelect.value;
+
+            // Show all sections first
+            Array.from(bulkSectionSelect.options).forEach(opt => {
+                opt.style.display = 'block';
+            });
+
+            // Hide sections that don't belong to selected session
+            Array.from(bulkSectionSelect.options).forEach(opt => {
+                if (opt.value && opt.dataset.session !== sessionId) {
+                    opt.style.display = 'none';
+                }
+            });
+
+            bulkSectionSelect.value = '';
+        });
+
+        let currentSearchTerm = '';
+        let currentSections = [];
+
+        const searchBox = document.getElementById("searchBox");
+        const resultDiv = document.getElementById("searchResult");
+        const noResultsDiv = document.getElementById("noResults");
+        const sectionBody = document.getElementById("sectionBody");
+
+        searchBox.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                currentSearchTerm = searchBox.value.trim();
+                if (currentSearchTerm !== "") {
+                    searchSections();
+                } else {
+                    hideAllResults();
+                }
+            }
+        });
+
+        // Also search on input with debounce
+        let searchTimeout;
+        searchBox.addEventListener("input", () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                currentSearchTerm = searchBox.value.trim();
+                if (currentSearchTerm !== "") {
+                    searchSections();
+                } else {
+                    hideAllResults();
+                }
+            }, 500);
+        });
+
+        function hideAllResults() {
+            resultDiv.style.display = "none";
+            noResultsDiv.style.display = "none";
+        }
+
+        function showNoResults() {
+            resultDiv.style.display = "none";
+            noResultsDiv.style.display = "block";
+        }
+
+        function showResults() {
+            resultDiv.style.display = "block";
+            noResultsDiv.style.display = "none";
+        }
+
+        async function addSection() {
+            const programId = document.getElementById("addProgramSelect").value;
+            const sessionId = document.getElementById("addSessionSelect").value;
+            const sectionName = document.getElementById("sectionName").value.trim();
+            const messageDiv = document.getElementById("addSectionMessage");
+
+            messageDiv.innerHTML = '';
+            messageDiv.className = 'modal-message';
+
+            if (!programId || !sessionId || !sectionName) {
+                messageDiv.innerHTML = 'Please fill all fields';
+                messageDiv.className = 'modal-message error-message';
+                return;
+            }
+
+            try {
+                const response = await fetch('/Manage/AddSection', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `programId=${programId}&sessionId=${sessionId}&sectionName=${encodeURIComponent(sectionName)}`
+                });
+
+                const data = await response.text();
+
+                if (data === "Ok") {
+                    messageDiv.innerHTML = 'Section added successfully!';
+        messageDiv.className = 'modal-message success-message';
+
+        // Reset form
+        document.getElementById("addProgramSelect").value = '';
+        document.getElementById("addSessionSelect").value = '';
+        document.getElementById("sectionName").value = '';
+
+        // Reset session filter
+        Array.from(addSessionSelect.options).forEach(opt => {
+            opt.style.display = 'block';
+        });
+
+        // Refresh search if there's a search term
+        if (currentSearchTerm !== "") {
+            await searchSections();
+        }
+
+        // Close modal after 1.5 seconds
+        setTimeout(() => {
+            const modalElement = document.getElementById('addSectionModal');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+
+            if (modal) {
+                // First hide the modal
+                modal.hide();
+
+                // Manually remove backdrop if it persists
+                setTimeout(() => {
+                    const backdrops = document.querySelectorAll('.modal-backdrop');
+                    backdrops.forEach(backdrop => {
+                        backdrop.remove();
+                    });
+
+                    // Remove modal-open class from body
+                    document.body.classList.remove('modal-open');
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
+                }, 500);
+            }
+
+            messageDiv.innerHTML = '';
+        }, 1500);
+        location.reload();
+
+                } else if (data === "AlreadyExists") {
+                    messageDiv.innerHTML = 'Section already exists in this session!';
+                    messageDiv.className = 'modal-message error-message';
+                } else {
+                    messageDiv.innerHTML = 'Error: ' + data;
+                    messageDiv.className = 'modal-message error-message';
+                }
+            } catch (error) {
+                console.error(error);
+                messageDiv.innerHTML = 'Error adding section. Please try again.';
+                messageDiv.className = 'modal-message error-message';
+            }
+        }
+
+        async function searchSections() {
+            const name = document.getElementById("searchBox").value.trim();
+            if (!name) {
+                hideAllResults();
+                return;
+            }
+
+            try {
+                const response = await fetch('/Manage/SearchSection', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `name=${encodeURIComponent(name)}`
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+                currentSections = data || [];
+                renderSectionTable(currentSections);
+            } catch (error) {
+                console.error(error);
+                showNoResults();
+            }
+        }
+
+        function renderSectionTable(sections) {
+            sectionBody.innerHTML = "";
+            if (!sections || sections.length === 0) {
+                showNoResults();
+                return;
+            }
+            showResults();
+
+            sections.forEach(section => {
+                const row = document.createElement("tr");
+                row.id = `section-row-${section.sectionId}`;
+                row.innerHTML = `
+                    <td>${section.sectionName || ''}</td>
+                    <td>${section.programName || ''}</td>
+                    <td>${section.sessionName || ''}</td>
+                    <td>${section.studentCount || 0}</td>
+                   
+        <td>
+            <div class="action-buttons">
+                <button class="view-btn"
+                    onclick="viewSectionStudents(${section.sectionId}, '${section.sectionName}')">
+                    <i class="fas fa-eye"></i> View
+                </button>
+
+                <button class="delete-btn"
+                    onclick="deleteSection(${section.sectionId}, '${section.sectionName}')">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </td>
+
+                `;
+                sectionBody.appendChild(row);
+            });
+        }
+
+        async function deleteSection(id, sectionName) {
+            if (!confirm(`Are you sure you want to delete section: ${sectionName || 'this section'}?`)) return;
+
+            try {
+                const response = await fetch('/Manage/DeleteSection', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `secid=${id}`
+                });
+
+                const result = await response.text();
+                if (result === "Ok") {
+                    // Remove from table
+                    const rowToRemove = document.getElementById(`section-row-${id}`);
+                    if (rowToRemove) rowToRemove.remove();
+
+                    // Update current array
+                    currentSections = currentSections.filter(s => s.sectionId !== id);
+
+                    // Show no results if empty
+                    if (currentSections.length === 0) {
+                        showNoResults();
+                    }
+
+                    showAlert("Section deleted successfully","success");
+                } else {
+                    showAlert("Error deleting section: " + result,"danger");
+                }
+            } catch (error) {
+                console.error(error);
+                showAlert("Error deleting section","danger");
+            }
+        }
+
+        async function bulkAddStudents() {
+            const programId = document.getElementById("bulkProgramSelect").value;
+            const sessionId = document.getElementById("bulkSessionSelect").value;
+            const sectionId = document.getElementById("bulkSectionSelect").value;
+            const fileInput = document.getElementById("excelFile");
+            const messageDiv = document.getElementById("bulkAddMessage");
+
+            messageDiv.innerHTML = '';
+            messageDiv.className = 'modal-message';
+
+            if (!programId || !sessionId || !sectionId) {
+                messageDiv.innerHTML = 'Please select program, session, and section';
+                messageDiv.className = 'modal-message error-message';
+                return;
+            }
+
+            if (!fileInput.files || fileInput.files.length === 0) {
+                messageDiv.innerHTML = 'Please select an Excel file';
+                messageDiv.className = 'modal-message error-message';
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('programId', programId);
+            formData.append('sessionId', sessionId);
+            formData.append('sectionId', sectionId);
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/Manage/UploadSectionStudents', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.text();
+                if (result === "Ok") {
+                    document.getElementById("bulkProgramSelect").value = '';
+        document.getElementById("bulkSessionSelect").value = '';
+        document.getElementById("bulkSectionSelect").value = '';
+        document.getElementById("excelFile").value = '';
+
+        // Reset filters
+        Array.from(bulkSessionSelect.options).forEach(opt => {
+            opt.style.display = 'block';
+        });
+        Array.from(bulkSectionSelect.options).forEach(opt => {
+            opt.style.display = 'block';
+        });
+
+        // Close modal after 1.5 seconds
+        setTimeout(() => {
+            const modalElement = document.getElementById('bulkAddModal');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+
+            if (modal) {
+                // First hide the modal
+                modal.hide();
+
+                // Manually remove backdrop if it persists
+                setTimeout(() => {
+                    const backdrops = document.querySelectorAll('.modal-backdrop');
+                    backdrops.forEach(backdrop => {
+                        backdrop.remove();
+                    });
+
+                    // Remove modal-open class from body
+                    document.body.classList.remove('modal-open');
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
+                }, 500);
+            }
+
+            messageDiv.innerHTML = '';
+        }, 1500);
+                } else if (result === "NoFile") {
+                    messageDiv.innerHTML = 'Please select a file';
+                    messageDiv.className = 'modal-message error-message';
+                } else {
+                    messageDiv.innerHTML = 'Error: ' + result;
+                    messageDiv.className = 'modal-message error-message';
+                }
+            } catch (error) {
+                console.error(error);
+                messageDiv.innerHTML = 'Error uploading file. Please try again.';
+                messageDiv.className = 'modal-message error-message';
+            }
+        }
+
+        // Clear modals when they're closed
+        document.getElementById('addSectionModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById("addSectionMessage").innerHTML = '';
+            document.getElementById("addProgramSelect").value = '';
+            document.getElementById("addSessionSelect").value = '';
+            document.getElementById("sectionName").value = '';
+
+            // Reset session filter
+            Array.from(addSessionSelect.options).forEach(opt => {
+                opt.style.display = 'block';
+            });
+        });
+
+        document.getElementById('bulkAddModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById("bulkAddMessage").innerHTML = '';
+            document.getElementById("bulkProgramSelect").value = '';
+            document.getElementById("bulkSessionSelect").value = '';
+            document.getElementById("bulkSectionSelect").value = '';
+            document.getElementById("excelFile").value = '';
+
+            // Reset filters
+            Array.from(bulkSessionSelect.options).forEach(opt => {
+                opt.style.display = 'block';
+            });
+            Array.from(bulkSectionSelect.options).forEach(opt => {
+                opt.style.display = 'block';
+            });
+        });
+                async function viewSectionStudents(sectionId, sectionName) {
+            const title = document.getElementById("viewStudentsTitle");
+            const body = document.getElementById("studentsTableBody");
+            const noStudents = document.getElementById("noStudents");
+
+            title.innerText = `Students of Section ${sectionName}`;
+            body.innerHTML = "";
+            noStudents.style.display = "none";
+
+            try {
+                const response = await fetch(`/Manage/GetSectionStudents?sectionId=${sectionId}`);
+                const data = await response.json();
+
+                if (!data || data.length === 0) {
+                    noStudents.style.display = "block";
+                } else {
+                    data.forEach((s, index) => {
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td>${s.rollNo}</td>
+                            <td>${s.studentName}</td>
+                        `;
+                        body.appendChild(row);
+                    });
+                }
+
+                new bootstrap.Modal(document.getElementById("viewStudentsModal")).show();
+            } catch (error) {
+                console.error(error);
+                showAlert("Failed to load students","danger");
+            }
+        }
+                function cleanupModalBackdrop() {
+            // Remove any lingering modal backdrops
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => {
+                backdrop.remove();
+            });
+
+            // Remove modal-open class from body
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+
+        // Call cleanup when page loads and when modals are hidden
+        document.addEventListener('DOMContentLoaded', function() {
+            cleanupModalBackdrop();
+
+            // Also add event listeners to properly cleanup when modals are closed
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                modal.addEventListener('hidden.bs.modal', function() {
+                    cleanupModalBackdrop();
+                });
+            });
+        });
+
+
+    </script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/css/assignS.css">
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <title>Document</title>
+</head>
+
+<body>
+    <div class="header">
+        <div class="hamburger" id="hamburger">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <div class="info">
+            <p id="st_name"></p>
+            <p id="st_roll"></p>
+        </div>
+    </div>
+    <div class="main">
+        <div class="side">
+            <div class="side-items">
+                <span class="side-head"><a asp-controller="Login" asp-action="dashboardS">Student Portal</a></span>
+                <span><i class="fas fa-calendar-check"></i><a asp-controller="Attendance" asp-action="attendanceS">View Attendance</a></span>
+                <span><i class="fas fa-chart-bar"></i><a asp-action="reportS" asp-controller="Report">Generate Report</a></span>
+                <span><i class="fas fa-key"></i><a asp-controller="Password" asp-action="PasswordChangingS">Change Password</a></span>
+                <span><i class="fas fa-table"></i><a asp-controller="Timetable" asp-action="ShowTimetableS">View Timetable</a></span>
+                <span><i class="fas fa-table"></i><a asp-controller="Manage" asp-action="assignS">Register Courses</a></span>
+                <span><i class="fa-solid fa-right-from-bracket"></i><a asp-controller="Login" asp-action="Logout">Logout</a></span>
+            </div>
+        </div>
+        <div class="main-body">
+            <h2>Avaliable Courses</h2>
+            @if (Model == null)
+            {
+                <div style="color:#0D1936; font-size:20px;margin-top:10px; margin-left:10px">Already Registered in all courses</div>
+            }
+
+            <div id="searchResult" class="dummy">
+                <table>
+                    <tr>
+                        <th>Course Name</th>
+                        <th>Teacher Name</th>
+                        <th>Register Course</th>
+                    </tr>
+                    @foreach (var course in Model)
+                        {
+                        <tr id="row-@course.course_id">
+                            <td>@course.Course_name</td>
+                            <td>@course.teacher_name</td>
+                                <td>
+                                    <button class="btn btn-primary assign-btn" data-bs-toggle="modal"
+                                        data-bs-target="#confirmModal" data-courseid="@course.course_id" onclick="settingid(this)">
+                                        Register
+                                    </button>
+                                </td>
+                            </tr>
+                    }
+                </table>
+                <div class="custom-alert" id="loginAlert" style="display:none">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="alertMessage"></span>
+                    <button onclick="closeAlert()">×</button>
+                </div>
+                <!-- Bootstrap Confirmation Modal -->
+                <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel"
+                     aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="confirmModalLabel">Confirm Registration</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                Are you sure you want to register for this course?
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    No
+                                </button>
+                                <button type="button" class="btn btn-success" data-bs-dismiss="modal" onclick="assigning()">
+                                    Yes
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+</body>
+<script>
+    function showAlert(message, type = "danger") {
+        const alertBox = document.getElementById("loginAlert");
+        const alertMessage = document.getElementById("alertMessage");
+
+        alertBox.classList.remove("success");
+
+        if (type === "success") {
+            alertBox.classList.add("success");
+        }
+
+        alertMessage.innerText = message;
+        alertBox.style.display = "flex";
+
+        setTimeout(() => {
+            alertBox.style.display = "none";
+        }, 4000);
+    }
+
+    function closeAlert() {
+        document.getElementById("loginAlert").style.display = "none";
+    }
+</script>
+<script>
+    fetch('/Login/data').then(res=>res.text()).then(data=>{
+        document.getElementById('st_name').innerHTML=data.split(',')[0];
+        document.getElementById('st_roll').innerHTML=data.split(',')[1];
+    });
+    let courseid=null;
+    function settingid(button){
+        courseid=button.getAttribute("data-courseid");
+    }
+    const hamburger = document.getElementById("hamburger");
+    const sidebar = document.querySelector(".side");
+    hamburger.addEventListener("click", () => {
+        sidebar.classList.toggle("active");
+    });
+    async function assigning(){
+        const response=await fetch(`/Manage/assigncourse/?cid=${courseid}`);
+        const data=await response.text();
+        if(data=="Ok"){
+            const row=document.getElementById(`row-${courseid}`);
+            row.remove();
+            showAlert("Assigned Course Successfully","success");
+            const table = document.querySelector("table");
+            if (table.rows.length === 1) { 
+                document.getElementById("searchResult").innerHTML =
+                `<div style="color:#0D1936; font-size:20px;margin-top:10px; margin-left:10px">
+                    Already Registered in all courses
+                </div>`;
+                }
+        }
+        else{
+            showAlert("Not assigned","danger")
+        }
+    }
+</script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+
+</html>

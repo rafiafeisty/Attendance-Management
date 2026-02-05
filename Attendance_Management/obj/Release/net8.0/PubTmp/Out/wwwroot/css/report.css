@@ -1,0 +1,73 @@
+﻿:root {
+    --primary-color: #0D1936;
+    --seconday-color: #535354;
+    --background-color: #EFEFEF;
+    --shadow-color: rgba(0,0,0,0.1);
+    --white-color: #FFF;
+    --black-color: #000;
+    --input-border-color: #E3E4E6;
+    --success: #4cc9f0;
+    --info: #4895ef;
+    --transition-3s: 0.3s;
+    --link-hover: #142b63;
+}
+
+
+.subject-reports {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.cards {
+    border: 1px solid black;
+    border-radius: 10px;
+    padding: 10px 15px;
+    height: 130px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+}
+
+    .cards p {
+        padding: 0;
+        margin: 0
+    }
+
+    .cards span {
+        font-weight: 700;
+    }
+
+.printing button {
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    padding: 10px;
+    transition: var(--transition-3s);
+    border-radius: 15px;
+    border: none;
+}
+
+.printing button:hover {
+    background-color: var(--link-hover);
+    transition: var(--transition-3s);
+    cursor: pointer;
+}
+
+.printing {
+    margin-left: auto;
+    margin-right: 30px;
+}
+
+.report-head {
+    color: var(--primary-color)
+}
+
+.top-head {
+    display: flex;
+    align-items: center;
+}
+
+.atten-head {
+    color: var(--primary-color);
+}

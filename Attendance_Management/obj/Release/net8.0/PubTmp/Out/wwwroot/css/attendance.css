@@ -1,0 +1,319 @@
+﻿:root {
+    --primary-color: #0D1936;
+    --seconday-color: #535354;
+    --background-color: #EFEFEF;
+    --shadow-color: rgba(0,0,0,0.1);
+    --white-color: #FFF;
+    --black-color: #000;
+    --input-border-color: #E3E4E6;
+    --success: #4cc9f0;
+    --info: #4895ef;
+    --transition-3s: 0.3s;
+    --link-hover: #142b63;
+}
+
+.selection {
+    display: flex;
+    gap: 20px;
+    font-weight: 600;
+}
+
+    .selection select {
+        font-size: 15px;
+    }
+
+    .selection select {
+        font-size: 15px;
+        padding: 5px;
+        border-radius: 12px;
+        border: 1px solid #ccc;
+    }
+
+.printing button {
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    padding: 10px;
+    padding-left: 15px;
+    padding-right: 15px;
+    transition: var(--transition-3s);
+    border-radius: 15px;
+    border: none;
+}
+
+    .printing button:hover {
+        background-color: var(--link-hover);
+        transition: var(--transition-3s);
+        cursor: pointer;
+    }
+
+.attendance-table {
+    margin-top: 30px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+    .attendance-table table {
+        width: 80%;
+        border-collapse: collapse;
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .attendance-table th {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 12px 15px;
+        font-size: 16px;
+        text-align: left;
+    }
+
+    .attendance-table td {
+        padding: 12px 15px;
+        font-size: 15px;
+        border-bottom: 1px solid #e5e5e5;
+    }
+
+    /* Row hover effect */
+    .attendance-table tbody tr:hover {
+        background-color: rgba(0,0,0,0.04);
+    }
+
+/* Status colors */
+.present {
+    color: green;
+    font-weight: bold;
+}
+
+.absent {
+    color: red;
+    font-weight: bold;
+}
+/* Average Attendance Box */
+
+.average-attendance h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.average-value {
+    margin-top: 8px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+}
+
+.average-attendance {
+    margin-top: 40px;
+}
+
+.students-table {
+    margin-top: 70px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+    .students-table table {
+        width: 90%;
+        border-collapse: collapse;
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+    }
+
+    .students-table th {
+        background: var(--primary-color);
+        color: white;
+        padding: 12px;
+        text-align: left;
+    }
+
+    .students-table td {
+        padding: 12px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .students-table tr:hover {
+        background-color: rgba(0,0,0,0.05);
+    }
+
+.dummy table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 26px;
+    margin-bottom: 10px;
+}
+
+    .dummy table th {
+        background: var(--primary-color);
+        color: white;
+        padding: 10px;
+    }
+
+    .dummy table td {
+        padding: 10px;
+        background: #fff;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .dummy table button {
+        padding: 5px 10px;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+        .dummy table button:hover {
+            background: var(--link-hover);
+        }
+
+.main-body select {
+    width: 220px;
+    padding: 8px 12px;
+    font-size: 15px;
+    border: 1px solid var(--input-border-color);
+    border-radius: 10px;
+    background-color: var(--white-color);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    transition: var(--transition-3s);
+    outline: none;
+}
+
+    .main-body select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 8px rgba(13, 25, 54, 0.4);
+    }
+
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.close-btn {
+    float: right;
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--primary-color);
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 8px;
+    margin: 8px 0 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    outline: none;
+}
+
+    .modal-content input:focus {
+        border-color: var(--primary-color);
+    }
+
+.save-btn {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--primary-color);
+    border: none;
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: var(--transition-3s);
+}
+
+    .save-btn:hover {
+        background-color: var(--link-hover);
+    }
+
+@media (max-width: 1024px) {
+    .selection {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+        .selection select {
+            font-size: 14px;
+            padding: 4px;
+        }
+
+    .printing button {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    .attendance-table table,
+    .students-table table {
+        width: 80%;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .selection {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+        .selection select {
+            width: 80%;
+        }
+
+    .printing button {
+        width: 80%;
+        text-align: center;
+        padding: 10px 0;
+    }
+
+    .attendance-table table,
+    .students-table table {
+        min-width: 80%;
+        font-size: 14px;
+    }
+
+    .attendance-table th,
+    .students-table th,
+    .attendance-table td,
+    .students-table td {
+        padding: 8px 10px;
+    }
+
+    .average-value {
+        font-size: 24px;
+    }
+
+    .average-attendance h3 {
+        font-size: 18px;
+    }
+}
+
+/* Extra Small Mobile */
+@media (max-width: 480px) {
+    .students-table table,
+    .attendance-table table {
+        font-size: 12px;
+    }
+
+    .selection {
+        font-size: 14px;
+    }
+
+    .printing button {
+        font-size: 13px;
+    }
+}

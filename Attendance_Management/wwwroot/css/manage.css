@@ -1,0 +1,270 @@
+﻿:root {
+    --primary-color: #0D1936;
+    --seconday-color: #535354;
+    --background-color: #EFEFEF;
+    --shadow-color: rgba(0,0,0,0.1);
+    --white-color: #FFF;
+    --black-color: #000;
+    --input-border-color: #E3E4E6;
+    --success: #4cc9f0;
+    --info: #4895ef;
+    --transition-3s: 0.3s;
+    --link-hover: #142b63;
+}
+
+.functions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.search {
+    width: 60%;
+    padding: 10px 40px;
+    border-radius: 20px;
+    border: 2px solid var(--primary-color);
+    outline: none;
+    background: white url("https://cdn-icons-png.flaticon.com/128/149/149852.png") no-repeat 10px center;
+    background-size: 20px;
+    transition: 0.3s ease;
+}
+
+    .search:focus {
+        border-color: var(--primary-color);
+    }
+
+.functions button {
+    padding: 10px 20px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+    .functions button:hover {
+        background-color: var(--link-hover);
+        transition: var(--transition-3s);
+        cursor: pointer;
+    }
+
+.dummy table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 26px;
+    margin-bottom: 10px;
+}
+
+    .dummy table th {
+        background: var(--primary-color);
+        color: white;
+        padding: 10px;
+    }
+
+    .dummy table td {
+        padding: 10px;
+        background: #fff;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .dummy table button {
+        padding: 5px 10px;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+        .dummy table button:hover {
+            background: var(--link-hover);
+        }
+
+.printing button {
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    padding: 10px;
+    padding-left: 15px;
+    padding-right: 15px;
+    transition: var(--transition-3s);
+    border-radius: 15px;
+    border: none;
+}
+
+    .printing button:hover {
+        background-color: var(--link-hover);
+        transition: var(--transition-3s);
+        cursor: pointer;
+    }
+/* =========================
+   STUDENTS VIEW TABLE
+   ========================= */
+
+.students-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: var(--white-color);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+/* Table Header */
+.students-table thead th {
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    padding: 14px;
+    text-align: left;
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+}
+
+/* Table Body Cells */
+.students-table tbody td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #e5e5e5;
+    font-size: 0.9rem;
+    vertical-align: middle;
+}
+
+/* Hover Effect */
+.students-table tbody tr.student-row:hover {
+    background-color: #f5f7fb;
+    transition: var(--transition-3s);
+}
+
+/* Roll Number */
+.students-table tbody td strong {
+    color: var(--primary-color);
+}
+
+/* =========================
+   SECTION HEADER ROW
+   ========================= */
+.section-header td {
+    background-color: #eef4ff;
+    color: var(--primary-color);
+    font-weight: bold;
+    font-size: 0.95rem;
+    padding: 12px 14px;
+    border-top: 2px solid var(--primary-color);
+}
+
+/* =========================
+   USERNAME / PASSWORD CELL
+   ========================= */
+.credentials-cell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-family: monospace;
+}
+
+/* Copy Button */
+.copy-btn {
+    background-color: transparent;
+    border: none;
+    color: var(--info);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 4px;
+    border-radius: 5px;
+    transition: var(--transition-3s);
+}
+
+.copy-btn:hover {
+    background-color: rgba(72, 149, 239, 0.15);
+    color: var(--primary-color);
+}
+
+/* =========================
+   BACK BUTTON
+   ========================= */
+.back-btn {
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    transition: var(--transition-3s);
+    font-size: 0.9rem;
+}
+
+.back-btn i {
+    margin-right: 6px;
+}
+
+.back-btn:hover {
+    background-color: var(--link-hover);
+}
+
+/* =========================
+   RESPONSIVE DESIGN
+   ========================= */
+@media (max-width: 768px) {
+    .students-table thead {
+        display: none;
+    }
+
+    .students-table,
+    .students-table tbody,
+    .students-table tr,
+    .students-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .students-table tr {
+        margin-bottom: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px var(--shadow-color);
+        background-color: var(--white-color);
+    }
+
+    .students-table td {
+        padding: 10px 14px;
+        text-align: right;
+        position: relative;
+    }
+
+    .students-table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 14px;
+        font-weight: bold;
+        color: var(--seconday-color);
+        text-align: left;
+    }
+
+    .section-header td {
+        text-align: center;
+    }
+}
+
+/* =========================
+   FIX TABLE HEADER HEIGHT & FULL COLOR
+   ========================= */
+
+.dummy table thead tr {
+    background-color: var(--primary-color);
+}
+
+.dummy table thead th {
+    background-color: transparent; /* inherit from tr */
+    color: var(--white-color);
+    padding: 14px 12px;
+    vertical-align: middle;
+    height: 100%;
+}
+.dummy table th,
+.dummy table td {
+    vertical-align: middle;
+    line-height: 1.4;
+}
